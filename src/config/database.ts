@@ -12,4 +12,13 @@ export const connectDatabase = async () => {
         console.error('Error connecting to MongoDB:', error);
         process.exit(1); // so it would exit the app if db connection fails
     }
-}
+};
+
+// putting this event listener outside the try-catch function so it is always registered:
+mongoose.connection.on('disconnected', () => {
+    console.log('Database disconnected');
+});
+
+mongoose.connection.on('error', (error) => {
+    console.error('Database error:', error);
+});
