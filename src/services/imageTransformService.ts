@@ -3,7 +3,7 @@ import path from 'path';
 import { mkdirSync } from 'fs';
 import { config } from '../config/environment';
 import { randomUUID } from 'crypto';
-import s3Service from './s3Service';
+import cloudStorageService from './cloudStorageService';
 import { extname } from 'path';
 import fs from 'fs';
 
@@ -84,17 +84,17 @@ export const transformImage = async (
         // save transformed image
         await pipeline.toFile(outputPath);
 
-        // If using S3, upload the transformed image
-        if (config.useS3Storage) {
+        // If using cloud storage, upload the transformed image
+        if (config.useCloudStorage) {
             try {
-                const s3Url = await s3Service.uploadFile(
+                const cloudUrl = await cloudStorageService.uploadFile(
                     outputPath,
                     path.basename(outputPath),
                     `image/${path.extname(outputPath).slice(1)}`
                 );
-                return s3Url;
+                return cloudUrl;
             } catch (error) {
-                console.error('Failed to upload transformed image to S3:', error);
+                console.error('Failed to upload transformed image to cloud:', error);
                 throw new Error('Failed to upload transformed image to cloud storage');
             }
         }

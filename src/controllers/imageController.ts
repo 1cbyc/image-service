@@ -7,7 +7,7 @@ import sharp from 'sharp';
 import { randomUUID } from 'crypto';
 import User from '../models/User';
 import { transformImage as processTransformation } from '../services/imageTransformService';
-import s3Service from '../services/s3Service';
+import cloudStorageService from '../services/cloudStorageService';
 
 interface AuthenticatedRequest extends Request {
     user?: any;
@@ -22,23 +22,23 @@ export const uploadImage = async (req: AuthenticatedRequest, res: Response) => {
         let filePath: string;
         let s3Url: string | undefined;
 
-        // Handle S3 vs Local storage
-        if (config.useS3Storage) {
-            // For S3, upload the buffer from memory storage
+        // Handle Cloud vs Local storage
+        if (config.useCloudStorage) {
+            // For Cloud storage, upload the buffer from memory storage
             const fileName = `${Date.now()}-${randomUUID()}${path.extname(req.file.originalname)}`;
-            s3Url = await s3Service.uploadFile(
-                req.file.buffer as any, // S3 service expects file path, but we have buffer
+            s3Url = await cloudStorageService.uploadFile(
+                req.file.buffer, // Cloud service handles both buffers and file paths
                 fileName,
                 req.file.mimetype
             );
-            filePath = s3Url; // Store S3 URL as path
+            filePath = s3Url; // Store cloud URL as path
         } else {
             // For local storage, use the existing file path
             filePath = req.file.path;
         }
 
         // Get image metadata using Sharp
-        const imageBuffer = config.useS3Storage ? req.file.buffer : fs.readFileSync(filePath);
+        const imageBuffer = config.useCloudStorage ? req.file.buffer : fs.readFileSync(filePath);
         const metadata = await sharp(imageBuffer).metadata();
 
         // Create new image record

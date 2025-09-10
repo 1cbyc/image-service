@@ -20,6 +20,7 @@
   "dependencies": {
     "@aws-sdk/client-s3": "^3.884.0",
     "@aws-sdk/lib-storage": "^3.884.0",
+    "@google-cloud/storage": "^7.17.0",
     "aws-sdk": "^2.1692.0",
     "bcryptjs": "^3.0.2",
     "cors": "^2.8.5",
