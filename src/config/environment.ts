@@ -27,9 +27,12 @@ export const config = {
     nodeEnv: process.env.NODE_ENV || 'development',
     // added ! at the end because i have already validated they exist
 
-    // for file upload configs - i have to add this to my required envvars
+    // for file upload configs
     maxFileSize: parseInt(process.env.MAX_FILE_SIZE || '5242880'), // TO BE 5MB DEFAULT
-    allowedFileTypes: process.env.ALLOWED_FILE_TYPES || 'image/jpeg,image/png,image/webp'
+    allowedFileTypes: process.env.ALLOWED_FILE_TYPES || 'image/jpeg,image/png,image/webp',
+    
+    // security configs
+    allowedOrigins: process.env.ALLOWED_ORIGINS || 'http://localhost:3000,http://localhost:3001'
 
 };
 
