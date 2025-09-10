@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { uploadImage, transformImageController, getImageById, listImages } from '../controllers/imageController';
 import { authMiddleware } from '../middleware/auth';
 import { upload } from '../middleware/upload';
+import { validate, transformSchema } from '../middleware/validation';
 
 const router = Router();
 
@@ -15,6 +16,6 @@ router.get('/:id', authMiddleware, getImageById);
 router.post('/', authMiddleware, upload.single('image'), uploadImage);
 
 // POST /api/images/:id/transform - Transform image
-router.post('/:id/transform', authMiddleware, transformImageController);
+router.post('/:id/transform', authMiddleware, validate(transformSchema), transformImageController);
 
 export default router;

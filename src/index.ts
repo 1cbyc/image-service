@@ -6,6 +6,7 @@ import { config } from './config/environment';
 import { connectDatabase } from './config/database';
 import authRoutes from './routes/authRoutes';
 import imageRoutes from './routes/imageRoutes';
+import { globalErrorHandler } from './middleware/errorHandler';
 
 const app = express();
 
@@ -29,8 +30,10 @@ app.get('/health', (req, res) => {
 // }));
 
 app.use('/api/images', imageRoutes);
-
 app.use('/api/auth', authRoutes);
+
+// Global error handler (must be last middleware)
+app.use(globalErrorHandler);
 
 // want to add the server startup logic
 const startServer = async () => {
