@@ -145,12 +145,11 @@ export const listImages = async (req: AuthenticatedRequest, res: Response) => {
         const page = parseInt(req.query.page as string) || 1;
         const limit = parseInt(req.query.limit as string) || 10;
         const skip = (page - 1) * limit;
-    }
 
-        // check if the user owns the images
+        // get user's images with pagination
         const images = await Image.find({ user: req.user._id })
             .select('-transformations -path') // exclude transformations for list view
-            .sort({ createdAt: -1 }); // so it is newest first
+            .sort({ createdAt: -1 }) // so it is newest first
             .skip(skip)
             .limit(limit);
 
