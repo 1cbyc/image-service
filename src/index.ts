@@ -5,7 +5,7 @@ import helmet from 'helmet';
 import { config } from './config/environment';
 import { connectDatabase } from './config/database';
 import authRoutes from './routes/authRoutes';
-// import imageRoutes from './routes/imageRoutes'; // TODO: Create this later
+import imageRoutes from './routes/imageRoutes';
 
 const app = express();
 
@@ -28,7 +28,8 @@ app.get('/health', (req, res) => {
 //     max: 100, // limit each IP to 100 requests per windowMs
 // }));
 
-// app.use('/api/v1/images', imageRoutes);
+app.use('/api/images', imageRoutes);
+
 app.use('/api/auth', authRoutes);
 
 // want to add the server startup logic
