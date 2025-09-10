@@ -7,6 +7,7 @@ import sharp from 'sharp';
 import { randomUUID } from 'crypto';
 import { extname } from 'path';
 import User from '../models/User'; // i imported this to use the user model in the request
+import { transformImage as processTransformation } from '../services/imageTransformService';
 
 interface AuthenticatedRequest extends Request {
     user?: any;
@@ -53,5 +54,52 @@ export const uploadImage = async (req: AuthenticatedRequest, res: Response) => {
     } catch (error) {
         console.error('Upload error:', error);
         res.status(500).json({ message: 'Failed to upload image' });
+    }
+};
+
+export const transformImageController = async (req: AuthenticatedRequest, res: Response) => {
+    try {
+        const { id } = req.params;
+        const transformations = req.body.transformations;
+
+        // to find the image
+        const image = await Image.findById(id);
+        if (!image) {
+            return res.status(404).json({ message: 'Image not found' });
+        }
+
+        // check if the user owns the image
+        if (image.user.toString() !== req.user._id.toString()) {
+            return res.status(403).json({ message: 'Access denied' });
+        }
+
+        // to process the transformation (so apply fezz)
+        const transformedPath = await processTransformation(image.path, transformations);
+        
+        // save transformations to db
+        const transformationRecord = {
+            type: 'multiple',
+            parameters: transformations,
+            resultPath: transformedPath,
+            processedAt: new Date()
+        };
+
+        image.transformations.push(transformationRecord);
+        await image.save();
+
+        // return response
+        res.json({
+            message: 'Image transformed successfully',
+            transformedImage: {
+                id: image._id,
+                transformationId: image.transformations[image.transformations.length - 1]._id,
+                originalPath: image.path,
+                transformedPath: transformedPath,
+                transformations: transformations
+            }
+        });
+    } catch (error) {
+        console.error('Transform error:', error);
+        res.status(500).json({ message: 'Failed to transform image' });
     }
 };
