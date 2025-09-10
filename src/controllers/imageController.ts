@@ -103,3 +103,37 @@ export const transformImageController = async (req: AuthenticatedRequest, res: R
         res.status(500).json({ message: 'Failed to transform image' });
     }
 };
+
+export const getImageById = async (req: AuthenticatedRequest, res: Response) => {
+    try {
+        const { id } = req.params;
+
+        const image = await Image.findById(id);
+        if (!image) {
+            return res.status(404).json({ message: 'Image not found' });
+        }
+
+        // check if the user owns the image
+        if (image.user.toString() !== req.user._id.toString()) {
+            return res.status(403).json({ message: 'Access denied' });
+        }
+
+        res.json({
+            image: {
+                id: image._id,
+                filename: image.filename,
+                originalName: image.originalName,
+                format: image.format,
+                dimensions: image.dimensions,
+                size: image.size,
+                path: image.path,
+                transformations: image.transformations,
+                uploadedAt: image.createdAt,
+                updatedAt: image.updatedAt
+            }
+        });
+    } catch (error) {
+        console.error('Get image by id error:', error);
+        res.status(500).json({ message: 'Failed to get image by id' });
+    }
+};
