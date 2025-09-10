@@ -4,6 +4,7 @@ import helmet from 'helmet';
 // import rateLimit from 'express-rate-limit';
 import { config } from './config/environment';
 import { connectDatabase } from './config/database';
+import authRoutes from './routes/authRoutes';
 // import imageRoutes from './routes/imageRoutes'; // TODO: Create this later
 
 const app = express();
@@ -28,6 +29,7 @@ app.get('/health', (req, res) => {
 // }));
 
 // app.use('/api/v1/images', imageRoutes);
+app.use('/api/auth', authRoutes);
 
 // want to add the server startup logic
 const startServer = async () => {
