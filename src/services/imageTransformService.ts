@@ -70,13 +70,13 @@ export const transformImage = async (
             switch (transformations.format) {
                 case 'jpeg':
                     pipeline = pipeline.jpeg({ quality: transformations.quality || 80 });
-                    break;
+                break;
                 case 'png':
                     pipeline = pipeline.png({ quality: transformations.quality || 80 });
-                    break;
+                break;
                 case 'webp':
                     pipeline = pipeline.webp({ quality: transformations.quality || 80 });
-                    break;
+                break;
             }
         }
         
