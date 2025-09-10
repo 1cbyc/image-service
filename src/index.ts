@@ -4,7 +4,7 @@ import helmet from 'helmet';
 // import rateLimit from 'express-rate-limit';
 import { config } from './config/environment';
 import { connectDatabase } from './config/database';
-import imageRoutes from './routes/imageRoutes';
+// import imageRoutes from './routes/imageRoutes'; // TODO: Create this later
 
 const app = express();
 
