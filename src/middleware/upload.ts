@@ -7,8 +7,8 @@ import { randomUUID } from 'crypto';
 // Storage configuration based on environment
 let storage: multer.StorageEngine;
 
-if (config.useS3Storage) {
-    // S3 Storage - files will be uploaded to S3 after multer processing
+if (config.useCloudStorage) {
+    // Cloud Storage - files will be uploaded to cloud after multer processing
     storage = multer.memoryStorage();
 } else {
     // Local Storage - traditional disk storage

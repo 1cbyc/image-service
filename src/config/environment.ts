@@ -34,13 +34,22 @@ export const config = {
     // security configs
     allowedOrigins: process.env.ALLOWED_ORIGINS || 'http://localhost:3000,http://localhost:3001',
 
-    // aws s3 configs
-    useS3Storage: process.env.USE_S3_STORAGE === 'true',
-    awsRegion: process.env.AWS_REGION || 'us-east-1',
+    // cloud storage configs
+    useCloudStorage: process.env.USE_CLOUD_STORAGE === 'true',
+    cloudProvider: process.env.CLOUD_PROVIDER || 'aws', // 'aws', 'gcp', 'cloudflare'
+    cloudRegion: process.env.CLOUD_REGION || 'us-east-1',
+
+    // AWS S3 configs
     awsAccessKeyId: process.env.AWS_ACCESS_KEY_ID,
     awsSecretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
-    s3BucketName: process.env.S3_BUCKET_NAME,
-    s3BucketUrl: process.env.S3_BUCKET_URL
+
+    // GCP configs
+    gcpProjectId: process.env.GCP_PROJECT_ID,
+    gcpKeyFilename: process.env.GCP_KEY_FILENAME,
+
+    // Shared configs
+    cloudBucketName: process.env.CLOUD_BUCKET_NAME,
+    cloudBucketUrl: process.env.CLOUD_BUCKET_URL
 
 };
 

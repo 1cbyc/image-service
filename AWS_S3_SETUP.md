@@ -1,7 +1,12 @@
-# AWS S3 Storage Setup Guide
+# Cloud Storage Setup Guide
 
 ## Overview
-This project supports both local file storage and AWS S3 cloud storage. You can switch between them using environment variables.
+This project supports local file storage and multiple cloud storage providers (AWS S3, Google Cloud Storage, Cloudflare R2). You can switch between them using environment variables.
+
+## Supported Providers
+- **AWS S3** - Amazon Simple Storage Service
+- **Google Cloud Storage** - GCP Cloud Storage
+- **Cloudflare R2** - Cloudflare's S3-compatible storage
 
 ## Prerequisites
 
@@ -39,6 +44,33 @@ This project supports both local file storage and AWS S3 cloud storage. You can 
    - **Bucket versioning**: Enable (optional but recommended)
    - **Server-side encryption**: Enable with AES256
 
+### Google Cloud Storage Setup
+
+#### 1. GCP Account Setup
+1. Create a Google Cloud account at [cloud.google.com](https://cloud.google.com)
+2. Create a new project or select existing one
+3. Enable billing for your project
+
+#### 2. Enable APIs
+Enable these APIs in your GCP project:
+- Cloud Storage API
+- Cloud Resource Manager API
+
+#### 3. Create Service Account
+1. Go to IAM & Admin → Service Accounts
+2. Create a new service account with Storage Object Admin role
+3. Generate and download JSON key file
+4. Store the JSON file securely (never commit to version control)
+
+#### 4. Create Cloud Storage Bucket
+1. Go to Cloud Storage → Buckets
+2. Create a new bucket with unique name
+3. Configure bucket settings:
+   - **Location**: Choose region close to your users
+   - **Storage class**: Standard
+   - **Access control**: Uniform (recommended)
+   - **Public access**: Allow public access to objects
+
 ### 3. Configure Bucket Policy
 Add this bucket policy to allow public read access:
 ```json
@@ -60,29 +92,57 @@ Add this bucket policy to allow public read access:
 
 Add these variables to your `.env` file:
 
+### AWS S3 Configuration
 ```env
-# Enable S3 Storage
-USE_S3_STORAGE=true
+# Enable Cloud Storage
+USE_CLOUD_STORAGE=true
+CLOUD_PROVIDER=aws
+CLOUD_REGION=us-east-1
 
-# AWS Configuration
-AWS_REGION=us-east-1
+# AWS Credentials
 AWS_ACCESS_KEY_ID=your-access-key-id
 AWS_SECRET_ACCESS_KEY=your-secret-access-key
-S3_BUCKET_NAME=your-bucket-name
-S3_BUCKET_URL=https://your-bucket-name.s3.us-east-1.amazonaws.com
+
+# Bucket Configuration
+CLOUD_BUCKET_NAME=your-bucket-name
+CLOUD_BUCKET_URL=https://your-bucket-name.s3.us-east-1.amazonaws.com
+```
+
+### Google Cloud Storage Configuration
+```env
+# Enable Cloud Storage
+USE_CLOUD_STORAGE=true
+CLOUD_PROVIDER=gcp
+CLOUD_REGION=us-central1
+
+# GCP Configuration
+GCP_PROJECT_ID=your-gcp-project-id
+GCP_KEY_FILENAME=path/to/service-account-key.json
+
+# Bucket Configuration
+CLOUD_BUCKET_NAME=your-gcs-bucket-name
+CLOUD_BUCKET_URL=https://storage.googleapis.com/your-gcs-bucket-name
 ```
 
 ## Switching Between Storage Types
 
 ### Local Storage (Default)
 ```env
-USE_S3_STORAGE=false
+USE_CLOUD_STORAGE=false
 ```
 
-### S3 Storage
+### AWS S3 Storage
 ```env
-USE_S3_STORAGE=true
+USE_CLOUD_STORAGE=true
+CLOUD_PROVIDER=aws
 # ... AWS configuration above
+```
+
+### Google Cloud Storage
+```env
+USE_CLOUD_STORAGE=true
+CLOUD_PROVIDER=gcp
+# ... GCP configuration above
 ```
 
 ## File Structure in S3
@@ -112,14 +172,35 @@ your-bucket-name/
 3. **Delete Unused Files**: Implement cleanup for temporary files
 4. **Monitoring**: Set up billing alerts and usage monitoring
 
-## Testing S3 Setup
+## Testing Cloud Storage Setup
 
-1. Set `USE_S3_STORAGE=true` in your `.env`
-2. Add your AWS credentials
-3. Start the server: `npm run dev`
-4. Upload an image via POST `/api/images`
-5. Check your S3 bucket - the file should be there
-6. The API response should return the S3 URL
+### AWS S3 Testing
+1. Set these variables in your `.env`:
+   ```env
+   USE_CLOUD_STORAGE=true
+   CLOUD_PROVIDER=aws
+   AWS_ACCESS_KEY_ID=your-key
+   AWS_SECRET_ACCESS_KEY=your-secret
+   CLOUD_BUCKET_NAME=your-bucket
+   ```
+2. Start the server: `npm run dev`
+3. Upload an image via POST `/api/images`
+4. Check your S3 bucket - the file should be there
+5. The API response should return the S3 URL
+
+### Google Cloud Storage Testing
+1. Set these variables in your `.env`:
+   ```env
+   USE_CLOUD_STORAGE=true
+   CLOUD_PROVIDER=gcp
+   GCP_PROJECT_ID=your-project-id
+   GCP_KEY_FILENAME=path/to/service-account.json
+   CLOUD_BUCKET_NAME=your-gcs-bucket
+   ```
+2. Start the server: `npm run dev`
+3. Upload an image via POST `/api/images`
+4. Check your GCS bucket - the file should be there
+5. The API response should return the GCS URL
 
 ## Troubleshooting
 
