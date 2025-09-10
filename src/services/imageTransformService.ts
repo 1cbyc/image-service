@@ -3,6 +3,7 @@ import path from 'path';
 import { mkdirSync } from 'fs';
 import { config } from '../config/environment';
 import { randomUUID } from 'crypto';
+import s3Service from './s3Service';
 import { extname } from 'path';
 import fs from 'fs';
 
@@ -82,7 +83,22 @@ export const transformImage = async (
         
         // save transformed image
         await pipeline.toFile(outputPath);
-        
+
+        // If using S3, upload the transformed image
+        if (config.useS3Storage) {
+            try {
+                const s3Url = await s3Service.uploadFile(
+                    outputPath,
+                    path.basename(outputPath),
+                    `image/${path.extname(outputPath).slice(1)}`
+                );
+                return s3Url;
+            } catch (error) {
+                console.error('Failed to upload transformed image to S3:', error);
+                throw new Error('Failed to upload transformed image to cloud storage');
+            }
+        }
+
         return outputPath;
     } catch (error) {
         console.error('Image transformation error:', error);

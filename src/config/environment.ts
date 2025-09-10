@@ -32,7 +32,15 @@ export const config = {
     allowedFileTypes: process.env.ALLOWED_FILE_TYPES || 'image/jpeg,image/png,image/webp',
     
     // security configs
-    allowedOrigins: process.env.ALLOWED_ORIGINS || 'http://localhost:3000,http://localhost:3001'
+    allowedOrigins: process.env.ALLOWED_ORIGINS || 'http://localhost:3000,http://localhost:3001',
+
+    // aws s3 configs
+    useS3Storage: process.env.USE_S3_STORAGE === 'true',
+    awsRegion: process.env.AWS_REGION || 'us-east-1',
+    awsAccessKeyId: process.env.AWS_ACCESS_KEY_ID,
+    awsSecretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+    s3BucketName: process.env.S3_BUCKET_NAME,
+    s3BucketUrl: process.env.S3_BUCKET_URL
 
 };
 

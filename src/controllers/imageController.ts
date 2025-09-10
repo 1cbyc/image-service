@@ -5,9 +5,9 @@ import path, { parse } from 'path';
 import fs from 'fs';
 import sharp from 'sharp';
 import { randomUUID } from 'crypto';
-import { extname } from 'path';
-import User from '../models/User'; // i imported this to use the user model in the request
+import User from '../models/User';
 import { transformImage as processTransformation } from '../services/imageTransformService';
+import s3Service from '../services/s3Service';
 
 interface AuthenticatedRequest extends Request {
     user?: any;
@@ -19,10 +19,29 @@ export const uploadImage = async (req: AuthenticatedRequest, res: Response) => {
             return res.status(400).json({ message: 'No file uploaded' });
         }
 
-        // to get image metadata using Sharp
-        const metadata = await sharp(req.file.path).metadata();
-        
-        // to generate new image record
+        let filePath: string;
+        let s3Url: string | undefined;
+
+        // Handle S3 vs Local storage
+        if (config.useS3Storage) {
+            // For S3, upload the buffer from memory storage
+            const fileName = `${Date.now()}-${randomUUID()}${path.extname(req.file.originalname)}`;
+            s3Url = await s3Service.uploadFile(
+                req.file.buffer as any, // S3 service expects file path, but we have buffer
+                fileName,
+                req.file.mimetype
+            );
+            filePath = s3Url; // Store S3 URL as path
+        } else {
+            // For local storage, use the existing file path
+            filePath = req.file.path;
+        }
+
+        // Get image metadata using Sharp
+        const imageBuffer = config.useS3Storage ? req.file.buffer : fs.readFileSync(filePath);
+        const metadata = await sharp(imageBuffer).metadata();
+
+        // Create new image record
         const image = new Image({
             filename: req.file.filename,
             originalName: req.file.originalname,
@@ -31,14 +50,15 @@ export const uploadImage = async (req: AuthenticatedRequest, res: Response) => {
                 width: metadata.width || 0,
                 height: metadata.height || 0,
             },
-            path: req.file.path,
+            path: filePath,
             size: req.file.size,
             user: req.user._id,
-            transformations: [] // to start with empty transformations
+            transformations: [],
+            s3Url: s3Url // Store S3 URL if applicable
         });
 
         await image.save();
-        
+
         res.status(201).json({
             message: 'Image uploaded successfully',
             image: {
@@ -48,7 +68,8 @@ export const uploadImage = async (req: AuthenticatedRequest, res: Response) => {
                 format: image.format,
                 dimensions: image.dimensions,
                 size: image.size,
-                uploadedAt: image.createdAt
+                uploadedAt: image.createdAt,
+                url: s3Url || `/uploads/original/${image.filename}` // Provide access URL
             }
         });
     } catch (error) {

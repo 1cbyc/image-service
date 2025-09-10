@@ -14,6 +14,7 @@ interface ImageDocument extends Document {
     format: string;
     dimensions: { width: number; height: number };
     path: string;
+    s3Url?: string;
     user: mongoose.Types.ObjectId;
     transformations: Transformation[];
 }
@@ -68,6 +69,10 @@ const imageSchema = new Schema({
     size: {
         type: Number,
         required: true,
+    },
+    s3Url: {
+        type: String,
+        required: false, // only required when using S3 storage
     },
     user: {
         type: mongoose.Types.ObjectId,
