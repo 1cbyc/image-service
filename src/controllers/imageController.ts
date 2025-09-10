@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import Image from '../models/Images';
 import { config } from '../config/environment';
-import path from 'path';
+import path, { parse } from 'path';
 import fs from 'fs';
 import sharp from 'sharp';
 import { randomUUID } from 'crypto';
@@ -104,6 +104,7 @@ export const transformImageController = async (req: AuthenticatedRequest, res: R
     }
 };
 
+// so this would get single image
 export const getImageById = async (req: AuthenticatedRequest, res: Response) => {
     try {
         const { id } = req.params;
@@ -135,5 +136,45 @@ export const getImageById = async (req: AuthenticatedRequest, res: Response) => 
     } catch (error) {
         console.error('Get image by id error:', error);
         res.status(500).json({ message: 'Failed to get image by id' });
+    }
+};
+
+// so this would list images with pagination
+export const listImages = async (req: AuthenticatedRequest, res: Response) => {
+    try {
+        const page = parseInt(req.query.page as string) || 1;
+        const limit = parseInt(req.query.limit as string) || 10;
+        const skip = (page - 1) * limit;
+    }
+
+        // check if the user owns the images
+        const images = await Image.find({ user: req.user._id })
+            .select('-transformations -path') // exclude transformations for list view
+            .sort({ createdAt: -1 }); // so it is newest first
+            .skip(skip)
+            .limit(limit);
+
+        const total = await Image.countDocuments({ user: req.user._id });
+
+        res.json({
+            images: images.map(image => ({
+                id: image._id,
+                filename: image.filename,
+                originalName: image.originalName,
+                format: image.format,
+                dimensions: image.dimensions,
+                size: image.size,
+                uploadedAt: image.createdAt
+            })),
+            pagination: {
+                currentPage: page,
+                totalPages: Math.ceil(total / limit),
+                totalImages: total,
+                limit: limit
+            }
+        });
+    } catch (error) {
+        console.error('List images error:', error);
+        res.status(500).json({ message: 'Failed to retrieve images' });
     }
 };
