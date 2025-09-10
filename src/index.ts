@@ -1,7 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
-// import rateLimit from 'express-rate-limit';
+import rateLimit from 'express-rate-limit';
 import { config } from './config/environment';
 import { connectDatabase } from './config/database';
 import authRoutes from './routes/authRoutes';
@@ -10,9 +10,29 @@ import { globalErrorHandler } from './middleware/errorHandler';
 
 const app = express();
 
-// the security middleware
-app.use(helmet());
-app.use(cors());
+// Security middleware
+app.use(helmet({
+    contentSecurityPolicy: {
+        directives: {
+            defaultSrc: ["'self'"],
+            styleSrc: ["'self'", "'unsafe-inline'"],
+            scriptSrc: ["'self'"],
+            imgSrc: ["'self'", "data:", "https:"],
+        },
+    },
+    hsts: {
+        maxAge: 31536000,
+        includeSubDomains: true,
+        preload: true
+    }
+}));
+
+app.use(cors({
+    origin: config.allowedOrigins.split(','),
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization']
+}));
 
 // to parse json requests
 app.use(express.json());
@@ -23,14 +43,43 @@ app.get('/health', (req, res) => {
     res.status(200).json({ message: 'Server is running' });
 });
 
-// rate limiting middleware
-// app.use(rateLimit({
-//     windowMs: 15 * 60 * 1000, // 15 minutes
-//     max: 100, // limit each IP to 100 requests per windowMs
-// }));
+// Rate limiting configurations
+const generalLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 100, // limit each IP to 100 requests per windowMs
+    message: {
+        error: 'Too many requests from this IP, please try again later.',
+    },
+    standardHeaders: true,
+    legacyHeaders: false,
+});
 
-app.use('/api/images', imageRoutes);
-app.use('/api/auth', authRoutes);
+const authLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 5, // limit each IP to 5 auth requests per windowMs
+    message: {
+        error: 'Too many authentication attempts, please try again later.',
+    },
+    standardHeaders: true,
+    legacyHeaders: false,
+});
+
+const uploadLimiter = rateLimit({
+    windowMs: 60 * 60 * 1000, // 1 hour
+    max: 20, // limit each IP to 20 uploads per hour
+    message: {
+        error: 'Upload limit exceeded, please try again later.',
+    },
+    standardHeaders: true,
+    legacyHeaders: false,
+});
+
+// Apply general rate limiting to all requests
+app.use(generalLimiter);
+
+// Apply specific rate limiters to routes
+app.use('/api/auth', authLimiter, authRoutes);
+app.use('/api/images', uploadLimiter, imageRoutes);
 
 // Global error handler (must be last middleware)
 app.use(globalErrorHandler);
